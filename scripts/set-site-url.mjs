@@ -1,0 +1,14 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+const value = process.env.SITE_URL;
+if (!value) throw new Error('SITE_URL is required, e.g. https://example.github.io/portfolio/');
+const url = new URL(value);
+if (url.protocol !== 'https:') throw new Error('SITE_URL must use HTTPS');
+url.pathname = `${url.pathname.replace(/\/$/, '')}/`;
+url.search = '';
+url.hash = '';
+const escape = value => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+const metadata = `<link rel="canonical" href="${escape(url.href)}" />\n<meta property="og:url" content="${escape(url.href)}" />\n<meta property="og:image" content="${escape(new URL('og-image.png', url).href)}" />\n<meta property="og:image:width" content="1200" />\n<meta property="og:image:height" content="630" />\n<meta property="og:image:alt" content="Francisco Bottazzini — Software Development, Infrastructure &amp; Cybersecurity. An illustrated journey through Argentina." />`;
+const file = new URL('../dist/index.html', import.meta.url);
+const html = readFileSync(file, 'utf8');
+writeFileSync(file, html.replace('<!-- deployment-metadata -->', metadata));
+console.log(`Production metadata configured for ${url.href}`);
